@@ -1,9 +1,10 @@
 const passport = require('passport');
+const bcrypt = require('bcrypt');
 
 module.exports = function(app,myDataBase){
-
+  
     app.route('/').get((req, res) => {
-        res.render(process.cwd() + '/views/pug', {title: 'Connected to Dataabase', message: 'Please login',showLogin:true});
+        res.render(process.cwd() + '/views/pug', {title: 'Connected to Dataabase', message: 'Please login',showLogin:true, showSocialAuth:true});
     });
     app.route('/login').post(passport.authenticate('local',{failureRedirect:'/'}),(req,res)=>{
         res.redirect('/profile')
@@ -14,7 +15,7 @@ module.exports = function(app,myDataBase){
     })
     app.route('/logout').get((req,res)=>{
         req.logout()
-        res.redirct('/')
+        res.redirect('/')
     });
     
     app.route('/register')
@@ -47,6 +48,17 @@ module.exports = function(app,myDataBase){
                 res.redirect('/profile')
             }
         );
+
+  app.route('/auth/github').get(passport.authenticate('github'))
+
+  app.route('/auth/github/callback').get(passport.authenticate('github',{failureRedirect:'/'}),(req,res)=>{
+    req.session.user_id = req.user.id
+    res.redirect('/chat')
+  })
+
+  app.route('/chat').get(ensureAuthenticated,(req,res)=>{
+    res.render(process.cwd()+ '/views/pug/chat',{user:req.user})
+  })
 }
 
 
